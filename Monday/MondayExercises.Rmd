@@ -1,0 +1,59 @@
+---
+title: "Introduction to R: Exsercises "
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+#### Please complete the following tasks: 
+
+NOTE: Before you start, please create a folder in your desktop called "Clubes". This should be your working directory. 
+
+1. Open Rstudio and create a script. Carry out the following exploration to get familiar with script: 
+
+* Try performing basic arithmetic calculations and then running the code to view results in the console. 
+* Create variables a and b and assign different numerical values to each
+* Try using some logical operators with a and b. Run the code to view results in the console 
+* Finally, save the script. 
+
+
+2. Now, create an Rmd file. Fill in the YAML header, insert at least nine code chunks, and try writing some text outside of the code chunks (for example, you could tittle each code chunk right above the code chunk). 
+
+
+3. In the first code chunk, install the packages "tidyr" and "tibble". Remember to run the code chunk 
+
+
+4. Pull up the help files for these packages in the help tab to learn more about them
+
+
+5. In a second code chunk, load the packages "tidyr" and tibble". Remember to run the code chunk. 
+
+
+6. In a third code chunk, create three vectors with different data types in each. One of the vectors must be numeric. Please make sure to save each vector to a variable. 
+
+
+7. Now we will do some work manipulating the numeric vector you just created. Do this in the fourth code chunk: 
+
+* Index the second term 
+* Index all terms except the second term 
+* Index the first and third term 
+* Change the value of the second term 
+
+
+8. In the fifth code chunk, create a 3x3 matrix and save the matrix as a variable.
+
+
+9. In the sixth code chunk, please carry out the following manipulation with the matrix you just created: 
+
+* Index the second row 
+* Index the second column 
+* Index the in row 2, column 3
+* Change the values in the second row 
+
+
+10. In the seventh code chunk, check your working directory. Your working directory should be the "Clubes" folder in your desktop. If this is not the case, reset your working directory.  
+
+
+11. In the ninth code chunk, import the data "" found in the class repository. 
+
+
+

@@ -1,0 +1,151 @@
+---
+title: "Installing and Troubleshooting"
+date: "August 7th, 2023"
+output: 
+  beamer_presentation:
+    toc: true
+---
+```{r setup, include=FALSE}
+#default: do not show code
+knitr::opts_chunk$set(echo = TRUE)
+
+#function for changing text size
+knitr::knit_hooks$set(mysize = function(before, options, envir) {
+  if (before) 
+    return(options$size)
+})
+
+#set console output to 50 characters so it fits on slide
+options("width" = 50, tibble.print_min = 4)
+library(tidyverse)
+```
+
+# Downloading R 
+
+[https://cran.itam.mx/](https://cran.itam.mx/)
+
+1. Follow the link 
+2. Choose the best version for you (mac vs Windows)
+3. Install R 4.3.1 for the first time 
+
+# Downloading R Studio 
+
+[https://posit.co/download/rstudio-desktop/](https://posit.co/download/rstudio-desktop/)
+
+1. Follow the link and scroll down 
+2. A list of links will appear for different OS
+3. Download the most appropriate version (max vs Windows)
+
+# Installing packages 
+In R, packages are collections of functions, data, and documentation that extend the capabilities of the base R language. 
+
+Depending on what you hope to archieve, you will need to load different packages. 
+
+Packages are installed using the function install.packages("")
+
+* At the top of your R script of Rmd, ensure that you install all needed function 
+* Don't install functions throughout the file: keep it organized 
+
+```{r, eval=FALSE}
+install.packages("ggplot2")
+install.packages("here")
+install.packages("wordcloud")
+```
+
+
+# Calling packages 
+Once a package has been installed once in your computer, you dont need to continulsy install it. 
+
+However, you do need to load the package everytime you want to use its functions. 
+
+* We do this using the function library()
+* R Script: load all packages at the beggining of the script 
+* Rmd: In the first code chunk, load all packages you will need 
+
+```{r, eval=FALSE}
+# Load all neeeded packages 
+library(ggplot2)
+library(here)
+library(wordcloud)
+```
+# Data Import: 
+To import different types of data, you need to first install the right package and call the right function 
+
+* Comma separated csv use **read_csv()** from the **readr** package
+* Semi column separated csv use **read_csv2()** from the **readr** package
+* Tab separated files use **read_tsv()** from the **readr** package
+* RDS use **readrds()** from the **base** package
+* Excel use **read_excel()** from the **readxl** package
+* SPSS/Stata use **thehaven** package (several functions)
+
+# Data Import 
+Function that import data have different arguments that allow you to specify how the data is imported. For example: 
+
+```{r, eval=FALSE}
+read_csv("test.csv", col_names = TRUE, 
+         col_types = NULL, na = c("", "NA"))
+```
+
+* col_names: Specifies whether the CSV file has column names in the first row or not
+
+
+* col_types: Specify the data types of each column in the CSV file. By default (NULL), the function will attempt to automatically infer the data types of each column based on the values present in the data.
+
+
+* na: Specifies the values that should be treated as missing values (NA) when reading the data
+
+# Working Directory 
+The working directory is the folder on your computer where R will look for files and where it will save files if you don't specify a different path
+
+If, when importing data, you simple include the name of the data without specifying location, R assumes the data is in the working directory 
+
+* You can check the current working directory using the getwd() function:
+```{r}
+getwd()
+```
+
+* You can change the working directory using the setwd() function:
+```{r}
+setwd("C:/Users/anton/OneDrive/Desktop/Clubes")
+```
+
+
+# Troubleshooting: Help Files 
+
+In the "help" tab of R studio, you can open help files that can provide you with useful information when experiencing difficulties. 
+
+To get help on a specific function or topic, you can use the help() function or the ? operator followed by the function or topic name.
+```{r, eval=FALSE}
+help(read.csv)
+# or
+?read.csv
+```
+
+Many functions in R have examples in their help files that demonstrate how to use the function. To see examples, you can use the example() function.
+```{r, eval=FALSE}
+example(read.csv)
+```
+
+# Troubleshooting: Textbook 
+
+A key source for R is ["R for Data Science"](https://r4ds.had.co.nz/index.html). 
+
+
+This is an online/open source textbook that offers a good overview of coding with R. 
+
+We have based much of our introductory content on this source, so we highly recommend consulting the book. 
+
+# Troubleshooting: Chat GPT
+
+Chat GPT is a wonderful tool to use when having problems coding. Even if you don't know where to start, chat GPT can provide sample from which you can build of off. 
+
+Following are some tips about using chat GPT to code in R: 
+
+* State that you are working with R: "In R..." 
+* Clearly state your problem or question related to R. The more specific you are, the better the response will be.
+* Provide relevant code snippets or data examples.
+* Describe the data you are working with. 
+* Ask the AI to explain the concepts or code in simpler terms.
+* Ask for examples of how to use specific R functions or packages.
+
+# Troubleshooting: Stackoverflow 
