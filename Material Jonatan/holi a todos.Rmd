@@ -1,0 +1,41 @@
+---
+title: "Mi primer intento de RMD"
+author: "Su amigo el dr Jonatan Mendoza"
+date: "Hoy"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Holi Estudiantes
+
+
+#### tutorial para trabajar RMD
+
+#### activar paqueterias
+
+Aqui se activan los paquetes 
+
+```{r }
+library(tidyverse)
+library(readxl)
+```
+
+
+#### Cargamos los datasets en el documento 
+
+
+```{r}
+
+pollution2020 <- read_excel("~/Library/CloudStorage/OneDrive-UNIVERSIDADNACIONALAUTÓNOMADEMÉXICO/bases/pollution2020.xlsx")
+```
+
+#### Generamos el grafico de elección 
+
+```{r echo=FALSE}
+ggplot(pollution2020, aes(FECHA, nivel, col=contaminante))+geom_smooth(se=F)+theme_classic()+labs(title = "Contaminantes aereos del 2018 al 2021", y="nivel de contaminación", col="tipo de contaminante")
+```
+
+
