@@ -153,4 +153,3 @@ Following are some tips about using chat GPT to code in R:
 * We recommend typing in your error message + "Stack Overflow" to view any entries that can help you troubleshoot your issue. 
 * You can also create your own account to post new queries and crowd source help for your specific code issue. 
 * There is also a growing community of Spanish-language Stack Overflow users. Check out this post for more information: https://stackoverflow.blog/2016/06/17/bienvenidos-al-blog-de-stack-overflow-en-espanol/
-

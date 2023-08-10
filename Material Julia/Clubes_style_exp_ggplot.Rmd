@@ -1,0 +1,396 @@
+---
+title: "Clubes de Ciencia: Coding style, exploratory data analysis, and more ggplot practice"
+author: "Julia Higgins"
+date: "July 18, 2023"
+output: 
+  beamer_presentation:
+    toc: true
+    fig_width: 6
+    fig_height: 4
+---
+
+```{r setup, include=FALSE}
+#default: do not show code
+knitr::opts_chunk$set(echo = TRUE)
+
+#function for changing text size
+knitr::knit_hooks$set(mysize = function(before, options, envir) {
+  if (before) 
+    return(options$size)
+})
+
+#set console output to 50 characters so it fits on slide
+options("width" = 50, tibble.print_min = 4)
+library(tidyverse)
+```
+
+## Coding Style
+
+## Why we care about having good coding style
+
+* Makes your work easy to replicate!
+* More efficient
+* Signals to employers and collaborators that you know best practices
+* Helps you keep track of your work during long-term projects 
+
+## Naming variables 
+
+* Use snake_case
+    1. Examples of well-named variables: age, gender, age_of_hh_head
+    1. Examples of poorly-named variables: age_, 0st, food+nonfood 
+    
+* All variables should be nouns, all functions should be verbs
+
+* Exercise: let's name some variables! 
+- Fetal programming: name of mother, baby's birth date, type of environmental health exposure
+- Oncology: types of mutations, date patient was diagnosed  
+
+## Using comments throughout your script to document your work 
+
+* In code, use comments to explain the “why”  - the what/how should be apparent from the code you wrote 
+  1. Example of good use of comments
+  
+```{r echo = TRUE}
+
+# declare variable
+age = 24
+
+# print variable
+print(age)
+
+```
+  1. Example of poor use of comments 
+  
+```{r echo = TRUE}
+
+#set the value of the age integer to 32*/int age = 32
+
+```
+
+* Note risk re: updating your code, but not the corresponding comments 
+
+## Correct use of spacing
+
+## Spacing 1
+
+* Put spaces on either side of mathematical operators apart from ˆ
+(i.e. +, -, ==, <, . . . ), and around the assignment operator (<-)
+
+```{r echo = TRUE}
+# Strive for
+z <- (3 + 3)^2 / 4
+
+# Avoid
+z<-( 3 + 3 ) ^ 2/4
+```
+
+## Spacing 2
+
+* Put a space before and after = when naming arguments in
+function calls.
+* Always put a space after a comma, and never before (just like in regular English/Spanish).
+
+```{r echo = TRUE}
+# Strive for
+mean(20, na.rm = TRUE)
+
+# Avoid
+mean (20 ,na.rm=TRUE)
+```
+## Spacing 3
+*It's OK to add extra spaces if it improves alignment.
+
+```{r eval = FALSE}
+
+flights |> 
+  mutate(
+    speed      = air_time / distance,
+    dep_hour   = dep_time %/% 100,
+    dep_minute = dep_time %%  100
+  )
+```
+
+*code uses integer division (`%/%`) to get hour and remainder (also known as modulo, `%%`) to get minute.
+
+## Pipes, indentation, and line length 
+
+## Pipes I -- the basics
+
+* |> should always have a space before it and should typically be
+the last thing on a line.
+
+```{r, eval=FALSE}
+# Strive for 
+flights |>  
+  filter(!is.na(arr_delay), !is.na(tailnum)) |> 
+  count(dest)
+
+# Avoid
+flights|>filter(!is.na(arr_delay), !is.na(tailnum))|>count(dest)
+```
+
+* This makes it easier to add new steps, rearrange existing steps,
+modify elements within a step, and get a 10,000 ft view by
+skimming the verbs on the left-hand side
+
+## Pipes II -- when to start a new line?
+* If the function you're piping into has named arguments (like `mutate()` or `summarize()`), put each argument on a new line.
+* If the function doesn't have named arguments (like `select()` or `filter()`), keep everything on one line unless it doesn't fit, in which case you should put each argument on its own line.
+
+```{r, eval=FALSE, mysize=TRUE, size = '\\small'}
+# Strive for
+flights |>  
+  group_by(tailnum) |> 
+  summarize(
+    delay = mean(arr_delay, na.rm = TRUE),
+    n = n()
+  )
+
+# Avoid
+flights |>
+  group_by(
+    tailnum
+  ) |> 
+  summarize(delay = mean(arr_delay, na.rm = TRUE), n = n())
+```
+
+## Pipes III -- indenting
+
+* After the first step of the pipeline, indent each line by two spaces.
+* If you're putting each argument on its own line, indent by an extra two spaces.
+* Make sure `)` is on its own line, and un-indented to match the horizontal position of the function name.
+
+```{r, eval=FALSE, mysize=TRUE, size = '\\footnotesize'}
+
+# Strive for 
+flights |>  
+  group_by(tailnum) |> 
+  summarize(
+    delay = mean(arr_delay, na.rm = TRUE),
+    n = n()
+  )
+
+# Avoid
+flights|>
+group_by(tailnum) |> 
+summarize(
+delay = mean(arr_delay, na.rm = TRUE), 
+n = n()
+)
+```
+
+## Pipes IV -- the long and short
+
+* It's OK to shirk some of these rules if your pipeline fits easily on one line.
+* You'll usually save time in the long run by starting with all the vertical space you need.
+
+```{r, eval=FALSE}
+
+# This fits compactly on one line
+df |> mutate(y = x + 1)
+
+# While this takes up 4x as many lines, it's easily extended to 
+# more variables and more steps in the future
+df |> 
+  mutate(
+    y = x + 1
+  )
+```
+
+* Be wary of writing very long pipes, say longer than 10-15 lines. Try to break them up into smaller sub-tasks, giving each task an informative name.
+
+* Before we proceed, let's try Exercise 5.6 in R4DS to apply the style guidelines we have learned. 
+
+# Exploratory data analysis 
+
+## packages (install these!)
+```{r}
+
+#install.packages("DescTools")
+#install.packages("binsreg")
+
+?DescTools
+?binsreg
+
+library(DescTools) #for winsorize
+library(binsreg) #for binsreg
+```
+
+# Exploring variation 
+
+## introduce dataset `diamonds`
+```{r diamonds, echo = TRUE}
+print(diamonds)
+```
+
+## help `diamonds` 
+```{r, echo = TRUE, eval = FALSE}
+?diamonds
+```
+
+## Categorical variables: few categories
+### Let's count the number of diamonds in each cut category
+
+```{r}
+diamonds |>
+  count(cut)
+```
+* Exercise: what are other examples of categorical variables with few categories?
+
+## Categorical variables: few categories
+### We can also visualize this instead of reporting it in a table
+
+```{r}
+ggplot(diamonds) +
+  geom_bar(aes(x = cut))
+```
+## Categorical Variables: many categories
+### Doing this may not work as well when your variable has many categories, as is the case in the 'dest' variable in the flights dataset. Let's see what it looks like.
+
+```{r}
+ggplot(nycflights13::flights) +
+  geom_bar(aes(x = dest))
+```
+
+* Exercise: what are other examples of categorical variables with many categories?
+
+## Continuous Variables
+### We can also visualize continuous variables, which are often reported as numbers and can take on virtually any value. 
+
+```{r}
+ggplot(diamonds) +
+  geom_histogram(aes(x = carat), binwidth = 0.5)
+```
+
+## Continuous Variables
+### Reversing our previous order of operations, we can also view continous variable data using the 'count' function. 
+
+```{r}
+diamonds |>
+  count(cut_width(carat, 0.5))
+```
+
+* Exercise: what are other examples of continuous variables?
+
+# More ggplot practice (Ch 2.2, `ggplot`)
+## Let's pick up where we left off and run through some additional plotting practice. 
+
+## packages
+
+```{r, echo = TRUE}
+
+?palmerpenguins
+?ggthemes
+
+library(tidyverse)
+library(palmerpenguins)
+library(ggthemes)
+```
+
+## meet the penguins
+```{r, echo = TRUE}
+penguins
+```
+
+## see every column
+```{r, echo = TRUE}
+glimpse(penguins)
+```
+
+## where are we going?
+## Below is the plot we ultimately want to create - let's go over the code to build it line by line. 
+
+```{r echo = FALSE, warning = FALSE, message = FALSE}
+
+ggplot(
+  data = penguins,
+  mapping = aes(x = flipper_length_mm, y = body_mass_g)
+) +
+  geom_point(aes(color = species, shape = species)) +
+  geom_smooth(method = "lm") +
+  labs(
+    title = "Body mass and flipper length",
+    subtitle = "Dimensions for Adelie, Chinstrap, and Gentoo Penguins",
+    x = "Flipper length (mm)", y = "Body mass (g)",
+    color = "Species", shape = "Species"
+  ) +
+  scale_color_colorblind()
+```
+
+## First, let's tell ggplot which dataset we want to use to create our graph.
+
+```{r}
+ggplot(data = penguins)
+```
+
+## Now, we need to add a 'mapping' line. This specifies which variables within our dataset we'd like ggplot to use to create the plot (need to specify both x and y axes).
+
+```{r}
+ggplot(
+  data = penguins,
+  mapping = aes(x = flipper_length_mm, y = body_mass_g)
+)
+```
+
+## add `geom_point()`. This tells ggplot what style of plot we would like it to use. 
+
+```{r}
+ggplot(
+  data = penguins,
+  mapping = aes(x = flipper_length_mm, y = body_mass_g)
+) +
+  geom_point()
+#> Warning: Removed 2 rows containing missing values (`geom_point()`).
+```
+
+## Warning: Removed 2 rows containing missing values (`geom_point()`).Since this warning came up, let's take a look at missing values within our dataset. We can make a choice to remove these when cleaning data prior to analyzing it, but ggplot handles missingness for us. 
+
+```{r}
+penguins |>
+  filter(is.na(flipper_length_mm))
+```
+
+## add `aes`thetic of `color` so we can include more information in our plot. Basically, we are telling ggplot to graph our penguins by flipper length and body mass, and to disaggregate this information by species.  
+
+```{r warning = FALSE, out.width="60%", mysize=TRUE, size = '\\small'}
+ggplot(
+  data = penguins,
+  mapping = aes(x = flipper_length_mm, y = body_mass_g, 
+                color = species) #new arg
+) +
+  geom_point()
+```
+
+## add `geom_smooth()`to add a line of best fit. This can help us to visually identify the relationship between the variables we are plotting. In this case, there is a positive relationship between penguin flipper length and body mass (meaning that as one of these values increases/decreases, the other value moves in the same direction).
+
+```{r  warning = FALSE, out.width="60%", mysize=TRUE, size = '\\small', message = FALSE}
+ggplot(
+  data = penguins,
+  mapping = aes(x = flipper_length_mm, y = body_mass_g, 
+                color = species)
+) +
+  geom_point() +
+  geom_smooth(method = "lm")
+```
+
+## Here, we can layer on a few more aesthetics. It is always a good idea to ensure that your plots are color-blind friendly, so we can specify the `scale_color_colorblind()` argument. We can also add labels to our plot using the title, subtitle, and other arguments we've included below.  
+
+```{r  warning = FALSE, eval = FALSE, message = FALSE, mysize=TRUE, size = '\\small'}
+ggplot(
+  data = penguins,
+  mapping = aes(x = flipper_length_mm, y = body_mass_g)
+) +
+  geom_point(aes(color = species, shape = species)) +
+  geom_smooth(method = "lm") +
+  labs(
+    title = "Body mass and flipper length",
+    subtitle = "Dimensions for Adelie, Chinstrap, and Gentoo Penguins",
+    x = "Flipper length (mm)", y = "Body mass (g)",
+    color = "Species", shape = "Species"
+  ) +
+  scale_color_colorblind()
+```
+```
+## Helpful guide for remembering all ggplot's functionalities: 
+
+* https://rstudio.com/resources/cheatsheets/

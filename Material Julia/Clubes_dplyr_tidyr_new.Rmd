@@ -1,0 +1,812 @@
+---
+title: " Clubes de Ciencia: Data Transformation with `dplyr` + Intro to Tidy Data"
+author: "Julia Higgins"
+date: "2023-08-08"
+output: 
+  beamer_presentation:
+    toc: true
+    fig_width: 6
+    fig_height: 4
+---
+
+```{r setup, include=FALSE}
+#default: show code
+knitr::opts_chunk$set(echo = TRUE)
+#function for changing text size
+knitr::knit_hooks$set(mysize = function(before, options, envir) {
+  if (before)
+    return(options$size)
+})
+#console printing options -----
+#set console output to 50 characters so it fits on slide
+options(width = 50)
+#set console output so tibbles print 4 rows
+options(tibble.print_min = 4)
+# install relevant packages 
+install.packages("tidyverse")
+install.packages("dplyr")
+#load dplyr + tidyverse
+library(dplyr)
+library(tidyverse)
+```
+
+# Flight data
+
+## load flight data
+
+```{r, mysize=TRUE, size = '\\small'}
+library(nycflights13)  #part of tidyverse
+flights <- flights #optional. Now, df shows up in top-right pane
+```
+
+## print flight data
+
+```{r, mysize=TRUE, size = '\\small'}
+print(flights) 
+view(flights)
+```
+
+## glimpse flight data
+
+```{r, mysize=TRUE, size = '\\small'}
+glimpse(flights)
+```
+
+## Data types
+
+| r | type | example columns |
+| --- | --- | --- | 
+| `int` | integer | `year, month` | 
+| `dbl` |  double (decimals) | `distance` | 
+| `chr` | character | `origin` | 
+| `dttm` | date-time | `time_hour` | 
+|  |   |   |      
+| `lgl` | logical (TRUE or FALSE) | coming in Ch 13 | 
+| `fctr` | factor (categorical variable) | coming in Ch 17 | 
+
+## help
+
+```{r, eval = FALSE}
+?flights
+# learn about the columns we have in the flights data frame
+```
+
+# Rows (`filter()`, `arrange()`, `distinct()`)
+
+
+## `filter()` roadmap
+* visual
+* three examples
+* extract common pattern
+* analogies to other languages - cut from this year's lecture 
+* syntax
+    * three ways to say equals in R
+    * filter from a list
+* challenges
+
+## Filter 
+
+## Question: What flights that arrived two hours late?
+
+```{r}
+flights |> 
+  filter(dep_delay > 120)
+```
+
+## Question: What flights that departed on January 1?
+
+```{r}
+flights |> 
+  filter(month == 1 & day == 1)
+```
+
+## Question: What flights that left in January or in February?
+
+```{r}
+flights |> 
+  filter(month == 1 | month == 2)
+```
+
+## Missing values example
+```{r}
+flights |> filter(flight == 4308 & month == 1 & day == 1)
+```
+
+## Solution: Use `is.na()` to test for missing 
+```{r}
+#tibble defines a new data frame
+new_dataframe <- tibble(x = c(1, NA, 3)) 
+new_dataframe |> filter(x > 1)
+new_dataframe |> filter(is.na(x) | x > 1)
+```
+
+## syntax: multiple ways to say same thing (redux)
+```{r eval = FALSE}
+flights |> 
+  filter(month == 1 | month == 2)
+```
+
+```{r eval = FALSE}
+flights |> 
+  filter(month %in% c(1, 2))
+```
+
+## syntax: how many rows did I drop?
+```{r}
+flights |> 
+  tally()
+
+flights |> 
+  filter(month == 1 | month == 2) |>
+  tally()
+```
+
+## syntax: how do I save a new data frame?
+
+so far we have "printed" output.
+
+```{r}
+flights_jan <-
+  flights |> 
+  filter(month == 1)
+```
+
+Note: used this already once before for `new_dataframe`
+
+## syntax: three ways to say "equals"
+
+Operator | Role | Example
+-------- | ---- | -------
+`<-` | assigning values | `jan_flights <- flights`
+`=` | arguments to functions | `ggplot(data = mpg)`
+`==` | test equality | `flights |> filter(month == 1)`
+
+```{r, error = TRUE, mysize = TRUE, size = '\\small'}
+flights |> 
+  filter(month == 1)
+```
+
+## Rows summary (so far)
+
+* `filter()` keeps rows that meet a condition
+* Syntax
+    * `%in%` for lists
+    * `tally()` checks how many dropped
+    * `<-` to save, `=` for function input, `==` test for equality
+
+## Roadmap
+
+* `filter()` -- DONE
+* `arrange()` 
+* `distinct()`
+* `tally()`
+
+## Question: Which flights arrived first?
+
+```{r}
+flights |> 
+  arrange(month, day, arr_time)
+```
+
+##  Question: Which flights had the latest departure time?
+
+```{r }
+flights |>
+  arrange(desc(dep_time)) #descending order
+```
+
+## `arrange()` syntax: missing values always come last
+
+```{r}
+df <- tribble(
+  ~num,
+  5, 
+  2, 
+  NA
+)
+df
+```
+
+```{r,  eval = FALSE}
+df |> arrange(num) #exercise: try these now
+df |> arrange(desc(num))
+```
+
+## Question: What are the origin-dest pairs?
+
+```{r}
+flights |> 
+  distinct(origin, dest)
+
+?distinct
+```
+
+## Question: What is first flight to each origin-dest pair?
+
+```{r}
+flights |> 
+  distinct(origin, dest, .keep_all = TRUE)
+```
+
+## Question: What is first flight per airplane each day?
+
+```{r}
+flights |> 
+  distinct(year, month, day, tailnum, .keep_all = TRUE)
+```
+
+## Question: How many airplanes took > 1 flight in a day?
+```{r}
+flights |>
+  tally()
+
+flights |> 
+  distinct(year, month, day, tailnum) |>
+  tally()
+```
+
+## Let's extract common patterns across dplyr verbs
+
+```{r eval = FALSE}
+flights |> 
+  filter(dep_delay > 120)
+```
+
+```{r eval = FALSE}
+flights |>
+  arrange(desc(dep_time))
+```
+
+```{r eval = FALSE}
+flights |>
+  distinct(origin, dest)
+```
+
+## rows summary
+
+All verbs in `dplyr`: take a data frame, then (`|>`) do an action, return a data frame
+
+**Verbs**
+
+* `filter()` drops rows (except if condition never satisfied)
+  * `%in%` for lists
+* `arrange()` never drops rows
+  * `desc` to order largest to smallest
+* `distinct()` drops duplicate rows
+  * `.keep_all` controls which columns are kept
+  
+**Cross-cutting syntax**
+
+* `tally()` 
+* `<-` to save, `=` for function input, `==` test for equality
+
+# Columns  (`mutate()`, `select()`, `rename()`, `relocate()`)
+
+## Question: Did flight make up for delays in the air?
+```{r}
+flights |> 
+  mutate(
+    gain = dep_delay - arr_delay,
+    speed = distance / air_time * 60
+  )
+```
+
+## Question: Did flight make up for delays in the air?
+```{r}
+flights |> 
+  mutate(
+    gain = dep_delay - arr_delay,
+    speed = distance / air_time * 60,
+    .before = 1 #new argument
+  )
+```
+
+
+## Question: Did flight make up for delays in the air?
+```{r}
+flights |> 
+  mutate(
+    gain = dep_delay - arr_delay,
+    speed = distance / air_time * 60,
+    .after = day #new argument
+  )
+```
+
+## Question: Did flight make up for delays in the air?
+```{r}
+flights |> 
+  mutate(
+    gain = dep_delay - arr_delay,
+    speed = distance / air_time * 60,
+    .keep = "used" #new argument
+  )
+```
+
+## summary (so far)
+
+* `mutate()` adds new columns
+  * `.before` & `.after` set new column placement 
+  * `.keep` controls whether to retain unused columns
+
+
+## Problem: print tries to show the whole data frame
+```{r}
+flights |> print()
+```
+
+## Question: What day did a flight take off?
+```{r}
+# Select columns by name
+flights |> 
+  select(year, month, day)
+```
+
+## `select()` syntax: Describe all columns between year and day (inclusive)
+```{r}
+flights |> 
+  select(year:day)
+```
+
+## `select()` syntax: Describe all columns except those between year and day
+```{r}
+flights |> 
+  select(!year:day)
+```
+
+## `select()` syntax: Describe all columns that are characters
+```{r}
+flights |> 
+  select(where(is.character))
+
+class(flights$carrier)
+```
+
+## `select()` syntax: Describe all columns whose name ends "time"
+```{r}
+select(flights, ends_with("time"))
+```
+
+## `select()` syntax: short column names
+
+* `ends_with("xyz")`: matches names that end with "xyz".
+
+* `starts_with("abc")`: matches names that begin with "abc".
+
+* `contains("ijk")`: matches names that contain "ijk".
+
+* `num_range("x", 1:3)`: matches `x1`, `x2` and `x3`.
+
+## `rename()` syntax: rename variables
+
+```{r}
+flights |> 
+  rename(tail_num = tailnum)
+```
+
+## `relocate()` syntax: relocate variables
+
+```{r}
+flights |> 
+  relocate(time_hour, air_time)
+```
+
+## `relocate()` syntax: rename variables
+```{r eval = FALSE}
+flights |> 
+  relocate(year:dep_time, .after = time_hour)
+flights |> 
+  relocate(starts_with("arr"), .before = dep_time)
+```
+
+## columns summary 
+
+* `mutate()` adds new columns
+  * `.before` & `.after` set new column placement 
+  * `.keep` controls whether to retain unused columns
+* `select()` drops columns
+    * `a:b` captures all columns between two names
+    * `starts_with(), ends_with(), contains(), num_range()`
+* `rename()`
+* `relocate()` moves columns
+
+# Groups (`summarize()`, `group_by()`, `slice_`)
+
+## roadmap
+
+* first use of `summarize()`
+* first use of `group_by()`
+
+## Question: what is the average departure delay?
+
+```{r}
+flights |> 
+  summarize(
+    avg_delay = mean(dep_delay)
+  )
+```
+
+## Problem: NA values
+```{r}
+flights |> 
+  filter(is.na(dep_delay))
+```
+
+## Solution: NA values
+```{r}
+flights |> 
+  filter(!is.na(dep_delay)) |> 
+  summarize(
+    avg_delay = mean(dep_delay)
+  )
+```
+
+Do **not** always drop NAs. Ch19 is all about missing values. 
+
+## multiple ways to say same thing (just as spoken language!)
+```{r eval = FALSE}
+flights |> 
+  filter(!is.na(dep_delay)) |> 
+  summarize(
+    avg_delay = mean(dep_delay)
+  )
+
+flights |> 
+  summarize(
+    avg_delay = mean(dep_delay, na.rm = TRUE)
+  )
+```
+
+Latter syntax preferred
+
+## Discussion q -- what's different from `print(flights)`?
+
+```{r}
+flights |> 
+  group_by(month)
+```
+
+## Question: what is the average departure delay by month?
+
+```{r}
+flights |> 
+  group_by(month) |> 
+  summarize(
+    avg_delay = mean(dep_delay, na.rm = TRUE)
+  )
+```
+
+Common pattern: `df |> group_by(...) |> summarize(...)`.
+
+## roadmap: going deeper in groups
+
+* quirk of `group_by()`
+* `count()`: a synonym for `summarize()`
+* `slice_`: a cousin of `distinct()`
+
+## quirk/feature: `group_by()` is persistent
+
+```{r cache = TRUE, message = FALSE, mysize=TRUE, size = '\\footnotesize'}
+by_mo_day <- 
+  flights |> 
+  group_by(month, day) 
+by_mo_day |> 
+  summarise(mean(arr_delay, na.rm = TRUE))
+```
+
+\footnotesize
+
+This "feature" creates a problem of "secret groups". Textbook: "In hindsight, this wasn’t a great way to make this function work, but it’s difficult to change without breaking existing code. To make it obvious what’s happening, dplyr displays a message that tells you how you can change this behavior." 
+
+## `ungroup()` restores original structure
+```{r mysize=TRUE, size = '\\footnotesize'}
+by_mo_day |>
+  ungroup() |>
+  summarise(mean(arr_delay, na.rm = TRUE))
+```
+
+## Question: how many flights by origin-dest pair?
+
+```{r message = FALSE}
+flights |> 
+  group_by(origin, dest) |> 
+  summarize(
+    n = n()
+  )
+```
+
+## multiple ways to say same thing (just as spoken language!)
+
+```{r eval = FALSE}
+flights |> 
+  group_by(origin, dest) |> 
+  summarize(
+    n = n()
+  )
+
+flights |> 
+  group_by(origin, dest) |> 
+  tally()
+
+flights |> 
+  count(origin, dest)
+```
+
+Last option is preferred. We call `count()` a "wrapper" for `group_by()` and `tally()`.
+## Recap question: What are the origin-dest pairs?
+
+```{r}
+flights |> 
+  distinct(origin, dest)
+```
+
+Note: `distinct()` and `group_by()` + `summarize()` are very closely related!
+
+## Question: how long is the longest delay to each destination?
+
+```{r , message = FALSE, warning = FALSE}
+flights |>
+  group_by(dest) |>
+  summarise(
+    max_delay = max(arr_delay, na.rm = TRUE)
+  )
+```
+
+## Question: what is the most delayed flight to each destination?
+
+```{r mysize=TRUE, size = '\\footnotesize'}
+flights |>
+  group_by(dest) |>
+  slice_max(arr_delay) |> 
+  relocate(dest)
+```
+
+## Slicing
+
+- `df |> slice_head(n = 1)` takes the first row from each group.
+- `df |> slice_tail(n = 1)` takes the last row in each group.
+- `df |> slice_min(x, n = 1)` takes the row with the smallest value of column `x`.
+- `df |> slice_max(x, n = 1)` takes the row with the largest value of column `x`.
+- `df |> slice_sample(n = 1)` takes one random row.
+
+## connection to prior material
+
+\footnotesize
+
+| english | query | 
+| --- | --- | 
+| What are the origin-dest pairs? | `flights |> distinct(origin, dest)` |
+| What is first flight to each origin-dest pair? | `flights |> distinct(origin, dest, .keep_all = TRUE)` |
+| How long is the longest delay to each destination? | `flights |> group_by(dest) |> summarize(max(arr_delay))` | 
+| What is the most delayed flight to each destination? | `flights |> group_by(dest) |> slice_max(arr_delay)` |  
+
+What's the common theme?
+
+* `distinct()` and `summarize()` keep just the columns of interest
+* `distinct(.keep_all = TRUE)` and `slice_max()` keep all the columns
+
+## groups summary
+
+* `group_by()`
+  * quirk with retained groupings
+* `summarize()`
+  * `na.rm = TRUE`
+  * `count()`: a synonym
+* `slice_`: a cousin of `distinct()`
+
+# Case study 
+
+## Question: Which planes are slowest on average?
+```{r, echo = FALSE}
+not_cancelled <- 
+  flights |>
+  filter(!is.na(arr_delay))
+```
+
+```{r, cache = TRUE, message = FALSE, fig.height = 2, mysize=TRUE, size = '\\footnotesize'}
+delays_tail <- 
+  not_cancelled |> 
+  group_by(tailnum) |> 
+  summarise(
+    delay = mean(arr_delay), 
+    n_flights = n()
+  )
+ggplot(delays_tail, aes(x = delay)) + 
+  geom_freqpoly()
+```
+
+## Challenge: what do the slowest planes have in common?
+
+```{r, fig.height = 3.5}
+ggplot(delays_tail, aes(x = n_flights, y = delay)) + 
+  geom_point(alpha = 1/10)
+```
+
+## Question: Which planes are slowest on average?
+```{r, fig.height = 3.5}
+delays_tail |> 
+  filter(n_flights > 25) |> 
+  ggplot(aes(x = n_flights, y = delay)) + 
+    geom_point(alpha = 1/10)
+```
+
+## Case study summary
+
+
+* Question: Which planes are slowest on average?
+
+* Challenge with real-world data: planes that look chronically tardy usually have very few flights
+
+* Recurring lesson: pay attention to sample counts by cell. the smaller the number of observations in the cell, the noisier your estimate. This is where statistics is useful, but we won't go deeper than acknowledging that there is a problem because this is not a statistics class.
+
+# Five uses of `summarise()`
+
+## Roadmap: more uses of `summarise()` & `mutate()`
+
+* up until now, we saw adjacent verbs (`count()`, `distinct()`, `slice_`)
+
+* now we are going to go deeper into what you can use `summarise` for 
+    * central tendency
+    * dispersion
+    * share
+    
+## Question: How late are flights typically by day? `mean`, `median`
+```{r, mysize=TRUE, size = '\\small'}
+not_cancelled |> 
+  group_by(year, month, day) |> 
+  summarise( #measures of central tendency
+    mean_d = mean(arr_delay),
+    median_d = median(arr_delay)
+  )
+```
+
+## Question: How much do delays vary?
+```{r, mysize=TRUE, size = '\\small', message = FALSE}
+not_cancelled |> 
+  group_by(year, month, day) |> 
+  summarise(sd_delay = sd(arr_delay))
+```
+
+## Q: How many flights left before 5am? `TRUE/FALSE`
+```{r}
+not_cancelled |> 
+  group_by(dep_time < 500) |>
+  summarise(n = n())
+```
+
+## Q: How many flights left before 5am? Create logical variable
+```{r  size = '\\footnotesize'}
+not_cancelled <- not_cancelled |> 
+  mutate(leave_earlyam = dep_time < 500)
+not_cancelled |> 
+  filter(tailnum == "N580JB") |> 
+  relocate(leave_earlyam, dep_time)
+```
+
+## Q: How many flights left before 5am? Create logical variable
+```{r}
+not_cancelled |> 
+  group_by(leave_earlyam) |>
+  summarise(n = n())
+```
+
+## Q: How many flights left before 5am? `TRUE/FALSE`
+```{r}
+not_cancelled |> #mutate, group_by & summarise!
+  count(leave_earlyam = dep_time < 500)
+```
+
+## Summarise: `summarise`
+
+Goal  | vector -> scalar
+------------- | -------------
+central tendency  | `mean`, `median`
+dispersion | `sd()`
+frequency  | `count`, `n()`
+proportion | `mean(value > x)`
+
+* Write the shortest readable code you can!
+
+## dplyr cheatsheet
+```{r, echo = FALSE, out.width = "100%"}
+
+# https://www.rstudio.com/wp-content/uploads/2015/02/data-wrangling-cheatsheet.pdf
+```
+
+# Bonus material
+
+## bonus 1: what do I do with my output?
+
+```{r}
+df <- flights |> count(carrier) #save as df
+flights |> count(carrier) #print
+```
+
+## bonus 1: print AND save
+
+```{r}
+#extra paren () to print
+(df <- flights |> count(carrier))
+```
+
+# A brief into to Tidy data
+
+## Motivation
+
+> "Happy families are all alike; every unhappy family is unhappy in its own way." ---- Leo Tolstoy
+
+> "Tidy datasets are all alike, but every messy dataset is messy in its own way." ---- Hadley Wickham
+
+## Tidy data defined
+
+What makes a dataset tidy?
+
+1.  Each variable is a column; each column is a variable.
+2.  Each observation is a row; each row is an observation.
+3.  Each value is a cell; each cell is a single value.
+
+R's tools are designed for data to be organized this way
+
+Let's run through an exercise with the flights dataset that will help us understand how to 'tidy' a dataset.
+
+1. Load the necessary packages and the nycflights13 dataset.
+
+```{r}
+library(tidyverse)
+library(nycflights13)
+
+# load the flights dataset (again!)
+data(flights)
+
+```
+
+2. Use pivot_longer to tidy the data by gathering delay information into a single column.
+
+```{r}
+flights_tidy <- flights %>%
+  pivot_longer(cols = starts_with("dep_"),  # Gather departure delay-related columns
+               names_to = "delay_type",
+               values_to = "delay_minutes")
+
+flights_tidy
+
+```
+
+3. Use pivot_wider to revert the tidy data back to the original format.
+
+```{r}
+
+flights_original <- flights_tidy %>%
+  pivot_wider(names_from = delay_type,
+              values_from = delay_minutes)
+
+flights_original
+
+```
+
+# Discussion questions 
+1. How does the use of pivot_longer help make the data more "tidy"?
+
+Answer: The pivot_longer function helps make the data more "tidy" by converting a dataset from a wide format to a long format. It gathers multiple columns that represent similar types of information into two columns: one for variable names (e.g., delay types) and another for corresponding values (e.g., delay durations). This restructuring makes it easier to analyze and visualize data, as each row now represents a single observation.
+
+2. What does the starts_with("dep_") argument do in the pivot_longer step?
+
+Answer: The starts_with("dep_") argument in the pivot_longer step specifies that only columns starting with the prefix "dep_" should be gathered. This means that only columns related to departure delays will be reshaped, resulting in a "tidy" data frame where each row represents a specific flight's departure delay type and duration.
+
+3. How does pivot_wider help revert the tidy data back to its original format?
+
+Answer: The pivot_wider function takes data in a long format (gathered/tidy) and reverts it back to a wide format. It does this by using the information in the "names" column (delay types) to create new columns in the resulting data frame. The values in the "values" column (delay durations) are then spread across these new columns. This reverts the data back to its original structure, although the column order might differ.
+
+4. Why is tidy data important for effective data analysis and visualization?
+
+Answer: Tidy data is important for effective data analysis and visualization because it follows a consistent structure that simplifies data manipulation and interpretation. Tidy data adheres to three key principles: each variable forms a column, each observation forms a row, and each type of observational unit forms a table. This structure facilitates easy use of the rich toolset in the tidyverse, including functions like dplyr and ggplot2. It also simplifies joining datasets, aggregating data, and generating visualizations, leading to more efficient and accurate analyses.
+
+## tidyr summary
+
+* `pivot_longer()`: **Create** two new columns
+  * default `names_to` is `key` and `values_to` is `value`
+* `pivot_wider()`: **Restructure/absorb** 
+  * default `names_from` is `type` and `values_from` is `count`
+* there's a symmetry to longer and wider so you can go back and forth between the two
+* likewise, symmetry between `separate()` and `unite()`
+
+## We also recommend that you review this R4DS chapter on Tidy Data for more information and practice: https://r4ds.had.co.nz/tidy-data.html
